@@ -1,6 +1,7 @@
-import pyttsx3, PyPDF2
+import PyPDF2
 from PyPDF2 import PdfReader
 import sys
+import objc
 '''
 1) Program extracts relevant data. Shows the title, author, creator, produv
 2) If language used is not English, convert the book to English and return a pdf version
@@ -24,11 +25,13 @@ def main():
         x= find_preface(file_name)
         if x==-1:
             print("Preface not found")
-            print(get_Content(file_name))
+            text=get_Content(file_name)
         else:
-            print(get_Content(file_name, x))
+            text=get_Content(file_name, x)
     else:
-        print(get_Content(file_name))
+        text=get_Content(file_name)
+    text_to_voice(text, "preface")
+        
 
 def get_Content(f, pagenum=0):
     '''
@@ -45,7 +48,7 @@ def get_Content(f, pagenum=0):
     '''
     reader = get_file(f)
     page = reader.pages[pagenum]
-    return (page.extract_text()) 
+    return (page.extract_text().replace("\n", " ")) 
 
 def get_Info(f):
     '''
@@ -98,8 +101,21 @@ def get_file(f):
     except FileNotFoundError:
         sys.exit("File not found. Try again")
 
+def text_to_voice(str, audio_name):
+    '''
+    Takes string and audio name as parameter and outputs audio file
+    :param str: Name of string
+    :type str: str
+    :param audio_name: Name of audio file to be created
+    :type str: str
+    :return: audio_name.mp3
+    '''
+    from gtts import gTTS
+    tts = gTTS(str,  tld='com.ng')
+    tts.save(f'{audio_name}.mp3')
 
 if __name__ =="__main__":
     main()
+
 
 
