@@ -1,54 +1,48 @@
-import PyPDF2
+
 from PyPDF2 import PdfReader
 import sys
-import objc
-'''
-1) Program extracts relevant data. Shows the title, author, creator, produv
-2) If language used is not English, convert the book to English and return a pdf version
-3) Create audio files for each page
-'''
-'''
-pdf= PyPDF2.PDFFileReader(open('book.pdf', 'rb'))
-speaker= pyttsx3.init()
-for page_num in range(pdfreader.numPages):
-    text=pdf.getPage(page_num).extractText()
-    clean_text= text.strip().replace('\n', ' ')
-    print(clean)
-'''
+from gtts import gTTS
+from deep_translator import GoogleTranslator
+from goslate import Goslate
+import time
+from langdetect import detect
+
 def main():
     if len(sys.argv)>1:
          file_name=sys.argv[1]+".pdf"
     else:
          file_name=(input("Enter your file name ")).strip()+".pdf"
-    val = int(input("Skip to preface? 1:yes 2: no"))
-    if val==1:
-        x= find_preface(file_name)
-        if x==-1:
-            print("Preface not found")
-            text=get_Content(file_name)
-        else:
-            text=get_Content(file_name, x)
-    else:
-        text=get_Content(file_name)
-    text_to_voice(text, "preface")
-        
+    num=int(input("Enter the page you would like to start with "))
+    page=get_Content(file_name, num)
+    str_to_voice(page, f'{file_name[:-4]}{num}')
 
-def get_Content(f, pagenum=0):
+
+def get_Content(f, n=0):
     '''
     Extracts text on the specific page number highlighted
-    Returns the text found on said page
-
+    Returns the text found on said page as str.
+    If page in another language, translation is also created as a txt file
     :param f: Name of file
     :type f: str
-    :param pagenum: Page requested
-    :type pagenum: integer
+    :param n: Page number requested
+    :type n: integer
     :sys.exit if FileNotFoundError 
-    :return: Text found on pagenumber pagenum
+    :return: Text found on pagenumber page
     :rtype: str
     '''
     reader = get_file(f)
-    page = reader.pages[pagenum]
-    return (page.extract_text().replace("\n", " ")) 
+    page = reader.pages[n]
+    content = page.extract_text().strip()
+    
+    if not content:
+        return None
+    if not is_eng(content):
+        content= translate(content)
+        str_to_text(content,f[:-4], n )
+
+    return content
+
+    
 
 def get_Info(f):
     '''
@@ -64,26 +58,66 @@ def get_Info(f):
     del(book_data["/CreationDate"])
     print(book_data)
 
-def find_preface(f):
+
+# def jump_preface(f):
     '''
-    finds the preface of the book 
-    Returns the page number for where the preface is located
+    finds the preface of the book and asks if user wants to skip to it.
+    Returns prefix index or 0
 
     :param f: Name of file
     :type f: str
     :sys.exit if FileNotFoundError 
-    :return: page number where preface located
+    :return: prefix index or 0
     :rtype: integer
     '''
     count=0
     reader = get_file(f)
-    for i in range(len(reader.pages)):
-        page = reader.pages[i]
-        if "Preface" in page.extract_text():
-            count+=1
-            if count==2:
-                return i
-    return -1
+    
+
+def str_to_voice(str, audio_name):
+    '''
+    Takes string and audio name as parameter and outputs audio file
+    :param str: Name of string
+    :type str: str
+    :param audio_name: Name of audio file to be created
+    :type str: str
+    :return: audio_name.mp3
+    '''
+    
+    tts = gTTS(str,  tld='com.ng')
+    tts.save(f'{audio_name}.mp3')
+
+def translate(str):
+    '''
+    Takes string and outputs translation as a string
+    :param str: Name of string
+    :type str: str
+    :return: translated text
+    :rtype: string
+    '''
+    gs = Goslate(service_urls=['http://translate.google.de'])
+    return GoogleTranslator().translate(str)
+    
+
+def str_to_text(str, name, pagenum):
+    try:
+        with open(f'{name}.txt', 'x') as f:
+            f.write(str)
+            f.write(f'\n{pagenum}\n')
+    except FileExistsError:
+         pass
+
+
+def is_eng(str):
+     gs = Goslate()
+     if detect(str)=='en':
+         return True
+     return False
+     '''
+     if gs.detect(str)=='en':
+         return True
+     return False
+     '''
 
 def get_file(f):
     '''
@@ -101,21 +135,10 @@ def get_file(f):
     except FileNotFoundError:
         sys.exit("File not found. Try again")
 
-def text_to_voice(str, audio_name):
-    '''
-    Takes string and audio name as parameter and outputs audio file
-    :param str: Name of string
-    :type str: str
-    :param audio_name: Name of audio file to be created
-    :type str: str
-    :return: audio_name.mp3
-    '''
-    from gtts import gTTS
-    tts = gTTS(str,  tld='com.ng')
-    tts.save(f'{audio_name}.mp3')
+def midpoint(f):
+    return len(get_file(f).pages) // 2
 
-if __name__ =="__main__":
+
+
+if __name__ == '__main__':
     main()
-
-
-
