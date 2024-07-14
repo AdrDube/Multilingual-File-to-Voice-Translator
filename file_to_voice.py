@@ -4,7 +4,10 @@ import sys
 from gtts import gTTS
 from deep_translator import GoogleTranslator
 from goslate import Goslate
+import re
+
 import time
+
 from langdetect import detect
 
 def main():
@@ -14,7 +17,7 @@ def main():
          file_name=(input("Enter your file name ")).strip()+".pdf"
     num=int(input("Enter the page you would like to start with "))
     page=get_Content(file_name, num)
-    str_to_voice(page, f'{file_name[:-4]}{num}')
+    #str_to_voice(page, f'{file_name[:-4]}{num}')
 
 
 def get_Content(f, n=0):
@@ -32,14 +35,12 @@ def get_Content(f, n=0):
     '''
     reader = get_file(f)
     page = reader.pages[n]
-    content = page.extract_text().strip()
-    
+    content = clean(page.extract_text().strip())
     if not content:
         return None
     if not is_eng(content):
         content= translate(content)
-        str_to_text(content,f[:-4], n )
-
+        str_to_text(content,f[:-3], n )
     return content
 
     
@@ -135,10 +136,16 @@ def get_file(f):
     except FileNotFoundError:
         sys.exit("File not found. Try again")
 
-def midpoint(f):
-    return len(get_file(f).pages) // 2
-
-
+def clean(str):
+    str= re.sub(r'[^\w\s:.,]','', str)
+    str=re.sub(r'^.+', '.', str)
+    return re.sub(r'_','', str)
 
 if __name__ == '__main__':
     main()
+
+
+
+     
+
+
