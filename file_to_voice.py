@@ -5,9 +5,7 @@ from gtts import gTTS
 from deep_translator import GoogleTranslator
 from goslate import Goslate
 import re
-
 import time
-
 from langdetect import detect
 
 def main():
@@ -18,7 +16,6 @@ def main():
     num=int(input("Enter the page you would like to start with "))
     page=get_Content(file_name, num)
     #str_to_voice(page, f'{file_name[:-4]}{num}')
-
 
 def get_Content(f, n=0):
     '''
@@ -42,9 +39,7 @@ def get_Content(f, n=0):
         content= translate(content)
         str_to_text(content,f[:-3], n )
     return content
-
-    
-
+  
 def get_Info(f):
     '''
     Prints metadata related to the file excluding creation date
@@ -74,7 +69,6 @@ def get_Info(f):
     count=0
     reader = get_file(f)
     
-
 def str_to_voice(str, audio_name):
     '''
     Takes string and audio name as parameter and outputs audio file
@@ -99,8 +93,15 @@ def translate(str):
     gs = Goslate(service_urls=['http://translate.google.de'])
     return GoogleTranslator().translate(str)
     
-
 def str_to_text(str, name, pagenum):
+    '''
+    Creates new text file and appends string
+   
+    :param str: string 
+    :type str: str
+    :return: 
+    :rtype: boolean
+    '''
     try:
         with open(f'{name}.txt', 'x') as f:
             f.write(str)
@@ -108,21 +109,23 @@ def str_to_text(str, name, pagenum):
     except FileExistsError:
          pass
 
-
 def is_eng(str):
+     '''
+    Checks if the text is in English
+   
+    :param str: string 
+    :type str: str
+    :return: 
+    :rtype: boolean
+    '''
      gs = Goslate()
      if detect(str)=='en':
          return True
      return False
-     '''
-     if gs.detect(str)=='en':
-         return True
-     return False
-     '''
 
 def get_file(f):
     '''
-    Ensures file is in .... and 
+    Ensures file is in memory 
     Returns the read file if valid 
    
     :param f: Name of file
@@ -137,15 +140,20 @@ def get_file(f):
         sys.exit("File not found. Try again")
 
 def clean(str):
-    str= re.sub(r'[^\w\s:.,]','', str)
-    str=re.sub(r'^.+', '.', str)
+    '''
+    Takes a string as input and cleans it up
+    :param str: string input
+    :type str: str
+    :return: clean string
+    :rtype: str
+    '''
+    str = re.sub(r'[^\w\s:.,]','', str)
+    str = re.sub(r'^.+', '.', str)
     return re.sub(r'_','', str)
+
+
 
 if __name__ == '__main__':
     main()
-
-
-
-     
 
 
